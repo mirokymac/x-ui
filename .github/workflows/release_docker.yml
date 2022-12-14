@@ -24,7 +24,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/x-ui
+          DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/x-ui
           DATE=${{steps.date.outputs.date}}
           BRANCH=${GITHUB_REF##*/}
 
