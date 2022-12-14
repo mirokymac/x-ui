@@ -60,5 +60,11 @@
       }
     ]
   },
-  "stats": {}
+  "stats": {},
+    "log": {
+    "access": "none",
+    "error": "/var/log/v2ray/error.log",
+    "loglevel": "warning",
+    "dnsLog": false
+  }
 }

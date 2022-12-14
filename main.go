@@ -54,6 +54,7 @@ func runWebServer() {
 	//信号量捕获处理
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)
 	for {
+		// 解释信号量序列
 		sig := <-sigCh
 
 		switch sig {
