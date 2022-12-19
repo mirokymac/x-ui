@@ -948,21 +948,15 @@ class Inbound extends XrayCommonClass {
         return 'vmess://' + base64(JSON.stringify(obj, null, 2));
     }
 
-    genVLESSLink(address = '', remark='') {
+    genSTDTransport(params = Map()) {
         const settings = this.settings;
-        const uuid = settings.vlesses[0].id;
-        const port = this.port;
-        const type = this.stream.network;
-        const params = new Map();
+        const stream = this.stream;
+        const type = stream.type;
+
         params.set("type", this.stream.network);
-        if (this.xtls) {
-            params.set("security", "xtls");
-        } else {
-            params.set("security", this.stream.security);
-        }
         switch (type) {
             case "tcp":
-                const tcp = this.stream.tcp;
+                const tcp = stream.tcp;
                 if (tcp.type === 'http') {
                     const request = tcp.request;
                     params.set("path", request.path.join(','));
@@ -974,12 +968,12 @@ class Inbound extends XrayCommonClass {
                 }
                 break;
             case "kcp":
-                const kcp = this.stream.kcp;
+                const kcp = stream.kcp;
                 params.set("headerType", kcp.type);
                 params.set("seed", kcp.seed);
                 break;
             case "ws":
-                const ws = this.stream.ws;
+                const ws = stream.ws;
                 params.set("path", ws.path);
                 const index = ws.headers.findIndex(header => header.name.toLowerCase() === 'host');
                 if (index >= 0) {
@@ -988,22 +982,21 @@ class Inbound extends XrayCommonClass {
                 }
                 break;
             case "http":
-                const http = this.stream.http;
+                const http = stream.http;
                 params.set("path", http.path);
                 params.set("host", http.host);
                 break;
             case "quic":
-                const quic = this.stream.quic;
+                const quic = stream.quic;
                 params.set("quicSecurity", quic.security);
                 params.set("key", quic.key);
                 params.set("headerType", quic.type);
                 break;
             case "grpc":
-                const grpc = this.stream.grpc;
+                const grpc = stream.grpc;
                 params.set("serviceName", grpc.serviceName);
                 break;
         }
-
         if (this.stream.security === 'tls') {
             if (!ObjectUtil.isEmpty(this.stream.tls.server)) {
                 address = this.stream.tls.server;
@@ -1014,6 +1007,15 @@ class Inbound extends XrayCommonClass {
         if (this.xtls) {
             params.set("flow", this.settings.vlesses[0].flow);
         }
+
+    }
+
+    genVLESSLink(address = '', remark='') {
+        const settings = this.settings;
+        const uuid = settings.vlesses[0].id;
+        const port = this.port;
+        const type = this.stream.network;
+        const params = this.genSTDTransport();
 
         const link = `vless://${uuid}@${address}:${port}`;
         const url = new URL(link);
@@ -1036,7 +1038,15 @@ class Inbound extends XrayCommonClass {
 
     genTrojanLink(address='', remark='') {
         let settings = this.settings;
-        return `trojan://${settings.clients[0].password}@${address}:${this.port}#${encodeURIComponent(remark)}`;
+        const params = this.genSTDTransport();
+
+        const link = `trojan://${settings.clients[0].password}@${address}:${this.port}`
+        const url = new URL(link);
+        for (const [key, value] of params) {
+            url.searchParams.set(key, value)
+        }
+        url.hash = encodeURIComponent(remark);
+        return url.toString();
     }
 
     genLink(address='', remark='') {
