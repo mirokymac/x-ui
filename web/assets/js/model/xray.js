@@ -948,7 +948,7 @@ class Inbound extends XrayCommonClass {
         return 'vmess://' + base64(JSON.stringify(obj, null, 2));
     }
 
-    genSTDTransport(params = Map()) {
+    genSTDTransport(params = new Map()) {
         const settings = this.settings;
         const stream = this.stream;
         const type = stream.type;
@@ -1004,10 +1004,7 @@ class Inbound extends XrayCommonClass {
             }
         }
 
-        if (this.xtls) {
-            params.set("flow", this.settings.vlesses[0].flow);
-        }
-
+        return params
     }
 
     genVLESSLink(address = '', remark='') {
@@ -1016,6 +1013,14 @@ class Inbound extends XrayCommonClass {
         const port = this.port;
         const type = this.stream.network;
         const params = this.genSTDTransport();
+        if (this.xtls) {
+            params.set("security", "xtls");
+        } else {
+            params.set("security", this.stream.security);
+        }
+        if (this.xtls) {
+            params.set("flow", this.settings.vlesses[0].flow);
+        }
 
         const link = `vless://${uuid}@${address}:${port}`;
         const url = new URL(link);
@@ -1039,6 +1044,14 @@ class Inbound extends XrayCommonClass {
     genTrojanLink(address='', remark='') {
         let settings = this.settings;
         const params = this.genSTDTransport();
+        if (this.xtls) {
+            params.set("security", "xtls");
+        } else {
+            params.set("security", this.stream.security);
+        }
+        if (this.xtls) {
+            params.set("flow", this.settings.clients[0].flow);
+        }
 
         const link = `trojan://${settings.clients[0].password}@${address}:${this.port}`
         const url = new URL(link);
